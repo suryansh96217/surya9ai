@@ -5,12 +5,13 @@ exports.handler = async (event) => {
         const { prompt } = JSON.parse(event.body);
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         
-        // We use the 1.5-flash ID so the code actually runs
+        // POWERED BY 3.5 FLASH
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash",
-            systemInstruction: "Your name is Surya 9. You are a helpful, high-speed AI core. Use bold text and be concise."
+            model: "gemini-3.5-flash",
+            systemInstruction: "Your name is Surya 9. You are a state-of-the-art AI powered by the Gemini 3.5 Flash core. You are incredibly fast, precise, and professional. Always use bold text for important terms and keep your answers concise unless asked otherwise."
         });
 
+        // Generate content with 3.5 Flash parameters
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
@@ -18,13 +19,13 @@ exports.handler = async (event) => {
         return {
             statusCode: 200,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reply: text }), // We make sure "reply" is clearly defined
+            body: JSON.stringify({ reply: text }),
         };
     } catch (error) {
-        console.error("Error:", error);
+        console.error("System Error:", error.message);
         return { 
             statusCode: 500, 
-            body: JSON.stringify({ reply: "I encountered an error in my core circuits. Please check the API key." }) 
+            body: JSON.stringify({ reply: "Surya 9 Core Error: " + error.message }) 
         };
     }
 };
