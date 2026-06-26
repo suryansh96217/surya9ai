@@ -7,9 +7,12 @@ async function askSurya() {
     const val = input.value.trim();
     if (!val) return;
 
+    // Show user message
     appendMsg('user-msg', val);
     input.value = '';
-    const loader = appendMsg('ai-msg', 'Processing...');
+
+    // Create a loading bubble
+    const loader = appendMsg('ai-msg', 'Syncing with 3.5 Flash core...');
 
     try {
         const res = await fetch('/.netlify/functions/chat', {
@@ -19,22 +22,22 @@ async function askSurya() {
         
         const data = await res.json();
         
-        // Safety Check: If reply exists, show it. If not, show the error.
         if (data && data.reply) {
+            // Render the AI response with bold text support
             loader.innerHTML = md.render(data.reply);
         } else {
-            loader.innerText = "Error: Surya 9 received an empty response.";
+            loader.innerText = "Error: Signal lost. Please try again.";
         }
 
     } catch (err) {
-        loader.innerText = "Connection failed. Is the Netlify function running?";
+        loader.innerText = "Connection Failed. Check your internet or API key.";
     }
 }
 
 function appendMsg(type, text) {
     const div = document.createElement('div');
     div.className = `msg ${type}`;
-    div.innerHTML = text;
+    div.innerHTML = text; 
     viewport.appendChild(div);
     viewport.scrollTop = viewport.scrollHeight;
     return div;
