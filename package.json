@@ -1,5 +1,12 @@
 {
-  "name": "surya-9",
-  "version": "1.0.0",
-  "dependencies": {}
+  "name": "surya-9-antariksh",
+  "version": "2.0.0",
+  "description": "Surya 9 Casual Cosmic Assistant",
+  "main": "api/chat.js",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0"
+  },
+  "engines": {
+    "node": "18.x"
+  }
 }
