@@ -22,7 +22,7 @@ async function askSurya() {
 
     // 2. Display "Processing" Indicator
     // We use a professional status message instead of "Syncing..."
-    const loader = appendMsg('ai-msg', 'Surya 9: Processing Query...');
+    const loader = appendMsg('ai-msg', 'Surya 9 is Processing Query...');
 
     try {
         // 3. Fetch from the new VERCEL endpoint (/api/chat)
