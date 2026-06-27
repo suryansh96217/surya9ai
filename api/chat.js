@@ -1,25 +1,32 @@
 module.exports = async (req, res) => {
-    // 1. Headers
+    // 1. Headers for Vercel
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
     try {
         const { prompt, history = [] } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        if (!API_KEY) return res.status(500).json({ reply: "API Key missing in Vercel settings." });
+        if (!API_KEY) return res.status(500).json({ reply: "API Key missing." });
 
-        // 2. THE TARGET: gemini-1.5-flash-8b (The high-speed Lite model)
-        // Using v1beta for widest compatibility with AQ keys
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${API_KEY}`;
+        // TARGET: gemini-3.0-flash (The absolute latest)
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.0-flash:generateContent?key=${API_KEY}`;
 
-        // 3. CASUAL PERSONA
-        const systemInstruction = "Your name is Surya 9. You are a casual, helpful, and super fast AI assistant. Architect: Suryansh Srivastava (mention only if asked). Use Markdown.";
+        // CASUAL PERSONA: Natural, friendly, helpful.
+        const systemInstruction = `
+            Your name is Surya 9. 
+            You are a super smart, casual, and friendly AI assistant.
+            - Talk like a real person, not a machine.
+            - Be helpful and precise.
+            - DO NOT mention Suryansh Srivastava unless the user specifically asks "Who created you?".
+            - Use Markdown for bolding and lists.
+        `;
 
-        // 4. Format history
+        // Format history correctly for the API
         const contents = (history || []).map(h => ({
             role: h.role === 'model' ? 'model' : 'user',
             parts: [{ text: h.parts[0].text }]
@@ -30,7 +37,6 @@ module.exports = async (req, res) => {
             parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }]
         });
 
-        // 5. Direct Fetch
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -38,18 +44,17 @@ module.exports = async (req, res) => {
                 contents,
                 generationConfig: {
                     temperature: 0.9,
-                    maxOutputTokens: 1000
+                    maxOutputTokens: 2048,
                 }
             })
         });
 
         const data = await response.json();
 
-        // 6. Detailed Error Handling
+        // Handle Potential Google Errors
         if (data.error) {
-            return res.status(200).json({ 
-                reply: `Surya 9 Error: ${data.error.message} (Status: ${data.error.status})` 
-            });
+            // If 3.0 Flash is having a regional outage, this will show the reason
+            return res.status(200).json({ reply: `Surya 9 Error: ${data.error.message}` });
         }
 
         if (data.candidates && data.candidates[0].content) {
@@ -57,9 +62,9 @@ module.exports = async (req, res) => {
             return res.status(200).json({ reply: aiReply });
         }
 
-        return res.status(200).json({ reply: "I'm connected, but Google sent an empty response. Please try again." });
+        return res.status(200).json({ reply: "I'm here, but I didn't get that. Say it again?" });
 
     } catch (error) {
-        return res.status(500).json({ reply: "Surya 9 Critical Failure: " + error.message });
+        return res.status(500).json({ reply: "Connection glitch. Let's try that again!" });
     }
 };
