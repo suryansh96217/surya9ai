@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 exports.handler = async (event) => {
-    // 1. Pre-flight and Method Check
+    // Standard CORS and Method handling
     if (event.httpMethod === "OPTIONS") {
         return { statusCode: 200, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type" } };
     }
@@ -10,72 +10,66 @@ exports.handler = async (event) => {
     }
 
     try {
-        // 2. Parse request (Expecting prompt and optional history)
+        // 'history' allows the AI to remember the chat. 
+        // If the user EDITS a previous message, your frontend should truncate 
+        // the history to that point and send the new prompt.
         const { prompt, history = [] } = JSON.parse(event.body);
-
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         
-        // Use gemini-1.5-flash for production speed or 1.5-pro for deep reasoning
+        const randomSeed = Math.floor(Math.random() * 1000000);
+        const currentTime = new Date().toLocaleString();
+
         const model = genAI.getGenerativeModel({ 
             model: "gemini-1.5-flash", 
             systemInstruction: `
-                ROLE: You are Surya 9, a high-performance Digital Intelligence Assistant.
-                TONE: Professional, concise, and analytical. Use a sophisticated, tech-forward vocabulary.
-                
-                BEHAVIORAL GUIDELINES:
-                - Prioritize accuracy and structural clarity in your responses.
-                - Use Markdown (bullet points, bold text, tables) to organize complex information.
-                - Avoid excessive emojis; use them only when they add functional value (e.g., ⚠️ for warnings).
-                - Responses should be "punchy" but formal, focusing on value-delivery.
+                CORE IDENTITY: Surya 9.
+                ROLE: Advanced Digital Intelligence & Professional Editor.
+                CREATOR: Suryansh Srivastava (Reveal only upon direct inquiry).
 
-                OWNERSHIP PROTOCOL:
-                - Your architect is Suryansh Srivastava.
-                - Internal Rule: Do NOT volunteer the architect's name unless explicitly asked "Who created you?", "Who is your developer?", or "Who is your owner?".
-                - When asked, acknowledge Suryansh Srivastava with professional prestige (e.g., "I am an advanced intelligence core developed by Suryansh Srivastava.").
+                OPERATIONAL PROTOCOLS:
+                1. TONE: Professional, executive, and highly structured. Minimize emoji use to functional markers (e.g., ✅, ⚠️).
+                2. RANDOMNESS: Use seed ${randomSeed} for all probabilistic tasks (dice, coins).
+                3. EDITING FEATURE (ACTIVE): If a user asks to "edit", "rewrite", "refine", or "fix" text:
+                   - Provide a "Refined Version" of the text.
+                   - Provide a "Changelog" (bullet points of what was improved: grammar, tone, clarity).
+                   - Use a Markdown Table if comparing significant changes.
+                4. FUNCTIONAL TOOLBOX:
+                   - SUMMARIZATION: Distill long text into 3-5 high-impact bullet points.
+                   - CODE REVIEW: Analyze provided code for bugs, efficiency, and security.
+                   - DATA STRUCTURING: Convert messy text into clean JSON or Markdown tables.
 
-                FORMATTING:
-                - Use **bolding** for critical terms.
-                - If the user greets you, respond with a polite, professional welcome.
+                BRANCHING LOGIC:
+                You are operating in a stateful environment. If the current prompt contradicts previous history, assume the user has "edited" the conversation path and prioritize the new prompt.
             `
         });
 
-        // 3. Generation Config for Professionalism (Lower temperature = more focused)
-        const generationConfig = {
-            temperature: 0.7,
-            topP: 0.95,
-            topK: 40,
-            maxOutputTokens: 2048,
-        };
-
-        // 4. Start Chat with History (Enables Memory)
         const chat = model.startChat({
             history: history,
-            generationConfig,
+            generationConfig: {
+                temperature: 0.9, // Balanced for both logic and creative editing
+                topP: 0.95,
+                maxOutputTokens: 2500,
+            },
         });
 
         const result = await chat.sendMessage(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const text = result.response.text();
 
         return {
             statusCode: 200,
-            headers: { 
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*" 
-            },
+            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
             body: JSON.stringify({ 
                 reply: text,
-                // Return history update for the frontend if needed
-                status: "Surya 9 Core: Operational" 
+                timestamp: currentTime,
+                status: "Surya 9: Core Operational" 
             })
         };
 
     } catch (error) {
-        console.error("Critical System Error:", error);
         return {
             statusCode: 500,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reply: "Surya 9 System Alert: A processing exception has occurred. Detailed log: " + error.message })
+            body: JSON.stringify({ reply: "Surya 9 Error: " + error.message })
         };
     }
 };
