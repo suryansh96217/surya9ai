@@ -1,51 +1,65 @@
 module.exports = async (req, res) => {
+    // 1. Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    const { prompt, history = [] } = req.body;
-    const API_KEY = process.env.GEMINI_API_KEY;
+    try {
+        const { prompt, history = [] } = req.body;
+        const API_KEY = process.env.GEMINI_API_KEY;
 
-    if (!API_KEY) return res.status(500).json({ reply: "API Key missing." });
+        if (!API_KEY) return res.status(500).json({ reply: "API Key missing in Vercel settings." });
 
-    // THE FAIL-SAFE LIST: These are the only two IDs that are 100% stable in India.
-    const modelIds = ["gemini-1.5-flash", "gemini-pro"];
-    
-    const systemInstruction = "Your name is Surya 9. You're a friendly, casual, and fast AI assistant. Architect: Suryansh Srivastava (reveal only if asked). Use Markdown.";
+        // 2. THE TARGET: gemini-1.5-flash-8b (The high-speed Lite model)
+        // Using v1beta for widest compatibility with AQ keys
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${API_KEY}`;
 
-    for (let modelName of modelIds) {
-        try {
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${API_KEY}`;
+        // 3. CASUAL PERSONA
+        const systemInstruction = "Your name is Surya 9. You are a casual, helpful, and super fast AI assistant. Architect: Suryansh Srivastava (mention only if asked). Use Markdown.";
 
-            const contents = (history || []).map(h => ({
-                role: h.role === 'model' ? 'model' : 'user',
-                parts: [{ text: h.parts[0].text }]
-            }));
-            contents.push({ role: "user", parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }] });
+        // 4. Format history
+        const contents = (history || []).map(h => ({
+            role: h.role === 'model' ? 'model' : 'user',
+            parts: [{ text: h.parts[0].text }]
+        }));
 
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents, generationConfig: { temperature: 0.8 } })
+        contents.push({
+            role: "user",
+            parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }]
+        });
+
+        // 5. Direct Fetch
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                contents,
+                generationConfig: {
+                    temperature: 0.9,
+                    maxOutputTokens: 1000
+                }
+            })
+        });
+
+        const data = await response.json();
+
+        // 6. Detailed Error Handling
+        if (data.error) {
+            return res.status(200).json({ 
+                reply: `Surya 9 Error: ${data.error.message} (Status: ${data.error.status})` 
             });
-
-            const data = await response.json();
-
-            if (data.candidates && data.candidates[0].content) {
-                return res.status(200).json({ 
-                    reply: data.candidates[0].content.parts[0].text 
-                });
-            }
-            
-            // If the model is "Not Found", the loop continues to 'gemini-pro'
-            console.warn(`Model ${modelName} failed, trying fallback...`);
-            
-        } catch (err) {
-            continue; 
         }
-    }
 
-    return res.status(500).json({ reply: "I'm having trouble connecting to my cosmic core. Please check your API key in Vercel." });
+        if (data.candidates && data.candidates[0].content) {
+            const aiReply = data.candidates[0].content.parts[0].text;
+            return res.status(200).json({ reply: aiReply });
+        }
+
+        return res.status(200).json({ reply: "I'm connected, but Google sent an empty response. Please try again." });
+
+    } catch (error) {
+        return res.status(500).json({ reply: "Surya 9 Critical Failure: " + error.message });
+    }
 };
