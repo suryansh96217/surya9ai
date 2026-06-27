@@ -1,13 +1,13 @@
 :root {
-    --surya-orange: #ff4d00;
-    --surya-glow: rgba(255, 77, 0, 0.5);
-    --space-deep: #02040a;
-    --cosmic-purple: #4a00e0;
-    --glass: rgba(10, 12, 18, 0.75);
+    --primary: #ff4d00;
+    --primary-glow: rgba(255, 77, 0, 0.4);
+    --bg: #02040a;
+    --glass: rgba(10, 12, 18, 0.8);
+    --purp: rgba(74, 0, 224, 0.2);
 }
 
 body {
-    background-color: var(--space-deep);
+    background-color: var(--bg);
     margin: 0;
     font-family: 'Outfit', sans-serif;
     height: 100vh;
@@ -18,64 +18,57 @@ body {
     color: #fff;
 }
 
-/* --- STARFIELD EFFECT --- */
+/* --- ANIMATED STARS --- */
 .stars {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/123163/stars.png') repeat;
-    z-index: -3;
-    animation: moveStars 200s linear infinite;
-    opacity: 0.8;
+    z-index: -2;
+    animation: moveStars 150s linear infinite;
+    opacity: 0.6;
 }
 
-/* --- COSMIC AURORA --- */
+/* --- ROTATING AURORA --- */
 .aurora {
     position: fixed;
     top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(circle at 30% 30%, var(--surya-orange) 0%, transparent 40%),
-                radial-gradient(circle at 70% 70%, var(--cosmic-purple) 0%, transparent 40%);
+    background: radial-gradient(circle at 30% 30%, rgba(255, 77, 0, 0.15), transparent 40%),
+                radial-gradient(circle at 70% 70%, var(--purp), transparent 40%);
     filter: blur(80px);
-    opacity: 0.2;
-    z-index: -2;
-    animation: rotateAurora 30s ease-in-out infinite alternate;
-}
-
-.glow-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(circle at center, transparent 20%, var(--space-deep) 100%);
     z-index: -1;
+    animation: rotateAurora 30s linear infinite;
 }
 
-/* --- MAIN CONTAINER --- */
+/* --- CHAT CONTAINER --- */
 .glass-container {
-    width: 92%;
+    width: 90%;
     max-width: 850px;
     height: 85vh;
     background: var(--glass);
     backdrop-filter: blur(25px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 28px;
+    border-radius: 24px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 40px rgba(0,0,0,0.7);
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    position: relative;
 }
 
 header {
     padding: 20px 30px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.brand { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
-.brand span { color: var(--surya-orange); text-shadow: 0 0 10px var(--surya-orange); }
+.brand { font-size: 1.6rem; font-weight: 800; letter-spacing: 1px; }
+.accent { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
 
-.status-indicator { font-size: 0.8rem; color: #aaa; display: flex; align-items: center; gap: 8px; }
+.status-box { font-size: 0.8rem; color: #aaa; display: flex; align-items: center; gap: 8px; }
 .dot { width: 8px; height: 8px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 8px #00ff88; }
 
-/* --- CHAT VIEWPORT --- */
+/* --- CHAT AREA --- */
 #chat-viewport {
     flex: 1;
     overflow-y: auto;
@@ -91,63 +84,66 @@ header {
     border-radius: 20px;
     line-height: 1.6;
     font-size: 1rem;
-    animation: fadeIn 0.3s ease;
+    animation: slideUp 0.3s ease;
 }
 
 .user-msg {
     align-self: flex-end;
-    background: linear-gradient(135deg, var(--surya-orange), #ff7b00);
-    color: #fff;
+    background: linear-gradient(135deg, var(--primary), #cc3d00);
+    color: white;
     border-bottom-right-radius: 4px;
     box-shadow: 0 4px 15px rgba(255, 77, 0, 0.3);
 }
 
 .ai-msg {
     align-self: flex-start;
-    background: rgba(255, 255, 255, 0.06);
-    color: #eee;
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-bottom-left-radius: 4px;
 }
 
-/* --- INPUT --- */
-.input-wrapper {
+/* Markdown Formatting */
+.ai-msg strong { color: var(--primary); }
+.ai-msg p { margin: 0 0 10px 0; }
+
+/* --- INPUT SECTION --- */
+.input-area {
     padding: 25px;
+    background: rgba(0,0,0,0.2);
     display: flex;
-    gap: 12px;
+    gap: 10px;
 }
 
 input {
     flex: 1;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 15px 20px;
-    border-radius: 15px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 15px;
+    border-radius: 14px;
     color: #fff;
-    font-size: 1rem;
     outline: none;
+    font-size: 1rem;
 }
 
-input:focus { border-color: var(--surya-orange); background: rgba(255, 255, 255, 0.08); }
+input:focus { border-color: var(--primary); }
 
 button {
-    background: var(--surya-orange);
-    color: white;
+    background: var(--primary);
     border: none;
+    color: white;
     padding: 0 30px;
-    border-radius: 15px;
-    font-weight: 700;
+    border-radius: 14px;
+    font-weight: 800;
     cursor: pointer;
     transition: 0.3s;
 }
 
-button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px var(--surya-glow); }
+button:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--primary-glow); }
 
 /* --- ANIMATIONS --- */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes rotateAurora { from { transform: rotate(0deg); } to { transform: rotate(15deg); } }
 @keyframes moveStars { from { background-position: 0 0; } to { background-position: -10000px 5000px; } }
+@keyframes rotateAurora { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Scrollbar */
 #chat-viewport::-webkit-scrollbar { width: 4px; }
-#chat-viewport::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+#chat-viewport::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
