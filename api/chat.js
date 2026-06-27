@@ -9,19 +9,18 @@ module.exports = async (req, res) => {
         const { prompt, history = [] } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        // Friendly, casual persona. Creator name hidden by default.
+        // Friendly guide persona
         const systemInstruction = `
-            Your name is Surya 9. You are a friendly, smart, and helpful AI assistant with a casual, cosmic personality.
-            - Speak like a helpful friend, not a robot. 
-            - Keep answers clear and concise.
-            - DO NOT mention your creator (Suryansh Srivastava) unless specifically asked "Who created you?" or "Who is your developer?".
-            - Use Markdown (bold, lists) to make information easy to read.
+            Your name is Surya 9. You are a helpful and friendly AI guide with a cosmic personality.
+            - Keep your tone casual and smart, not robotic.
+            - NEVER mention your creator (Suryansh Srivastava) unless specifically asked "Who made you?" or "Who is your owner?".
+            - Use Markdown (bold, lists, tables) to keep answers beautiful.
         `;
 
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
         // Format history for Google API
-        const contents = history.map(h => ({
+        const contents = (history || []).map(h => ({
             role: h.role,
             parts: [{ text: h.parts[0].text }]
         }));
@@ -38,13 +37,12 @@ module.exports = async (req, res) => {
         });
 
         const data = await response.json();
-        
         if (data.error) throw new Error(data.error.message);
 
         const aiReply = data.candidates[0].content.parts[0].text;
         return res.status(200).json({ reply: aiReply });
 
     } catch (error) {
-        return res.status(500).json({ reply: "I'm having a bit of trouble connecting to my cosmic core. Mind trying again? 🌌" });
+        return res.status(500).json({ reply: "Connection lost in space. Mind trying again? 🌌" });
     }
 };
