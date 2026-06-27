@@ -5,49 +5,47 @@ module.exports = async (req, res) => {
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    try {
-        const { prompt, history = [] } = req.body;
-        const API_KEY = process.env.GEMINI_API_KEY;
+    const { prompt, history = [] } = req.body;
+    const API_KEY = process.env.GEMINI_API_KEY;
 
-        // THE SECRET SAUCE: v1beta + 1.5-flash-8b (This is the "Lite" core)
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${API_KEY}`;
+    if (!API_KEY) return res.status(500).json({ reply: "API Key missing." });
 
-        const systemInstruction = "Your name is Surya 9. You're a friendly, casual, and helpful AI assistant. Speak like a friend, keep it simple. Only mention Suryansh Srivastava if specifically asked who created you. Use Markdown.";
+    // THE FAIL-SAFE LIST: These are the only two IDs that are 100% stable in India.
+    const modelIds = ["gemini-1.5-flash", "gemini-pro"];
+    
+    const systemInstruction = "Your name is Surya 9. You're a friendly, casual, and fast AI assistant. Architect: Suryansh Srivastava (reveal only if asked). Use Markdown.";
 
-        // Construct history
-        const contents = (history || []).map(h => ({
-            role: h.role === 'model' ? 'model' : 'user',
-            parts: [{ text: h.parts[0].text }]
-        }));
-        
-        contents.push({
-            role: "user",
-            parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }]
-        });
+    for (let modelName of modelIds) {
+        try {
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${API_KEY}`;
 
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                contents,
-                generationConfig: { temperature: 0.9, maxOutputTokens: 1500 }
-            })
-        });
+            const contents = (history || []).map(h => ({
+                role: h.role === 'model' ? 'model' : 'user',
+                parts: [{ text: h.parts[0].text }]
+            }));
+            contents.push({ role: "user", parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }] });
 
-        const data = await response.json();
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents, generationConfig: { temperature: 0.8 } })
+            });
 
-        // Check if Google sent an error
-        if (data.error) {
-            return res.status(200).json({ reply: `Google API says: ${data.error.message}` });
+            const data = await response.json();
+
+            if (data.candidates && data.candidates[0].content) {
+                return res.status(200).json({ 
+                    reply: data.candidates[0].content.parts[0].text 
+                });
+            }
+            
+            // If the model is "Not Found", the loop continues to 'gemini-pro'
+            console.warn(`Model ${modelName} failed, trying fallback...`);
+            
+        } catch (err) {
+            continue; 
         }
-
-        if (data.candidates && data.candidates[0].content) {
-            return res.status(200).json({ reply: data.candidates[0].content.parts[0].text });
-        }
-
-        return res.status(200).json({ reply: "I'm here, but the signal is a bit weak. Try sending that again?" });
-
-    } catch (error) {
-        return res.status(500).json({ reply: "System Error: " + error.message });
     }
+
+    return res.status(500).json({ reply: "I'm having trouble connecting to my cosmic core. Please check your API key in Vercel." });
 };
