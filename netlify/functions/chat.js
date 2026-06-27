@@ -17,7 +17,7 @@ exports.handler = async (event) => {
         
         // Use gemini-1.5-flash for production speed or 1.5-pro for deep reasoning
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-3.1-flash", 
+            model: "gemini-1.5-flash", 
             systemInstruction: `
                 ROLE: You are Surya 9, a high-performance Digital Intelligence Assistant.
                 TONE: Professional, concise, and analytical. Use a sophisticated, tech-forward vocabulary.
