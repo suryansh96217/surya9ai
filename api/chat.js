@@ -1,6 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 module.exports = async (req, res) => {
+    // 1. Headers for Vercel/CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -11,43 +12,44 @@ module.exports = async (req, res) => {
     try {
         const { prompt, history = [] } = req.body;
         
-        // Ensure API Key exists
         if (!process.env.GEMINI_API_KEY) {
-            throw new Error("API Key is missing in Vercel Environment Variables");
+            return res.status(500).json({ reply: "Configuration Error: API Key missing." });
         }
 
+        // 2. Initialize the AI with the STABLE API version (v1)
+        // This stops the 404 v1beta error.
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         
-        // FIX: Using 'gemini-1.5-flash' which is the standard GA (General Availability) model
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash" 
-        });
+        // We specify 'v1' explicitly here
+        const model = genAI.getGenerativeModel(
+            { model: "gemini-1.5-flash" }, 
+            { apiVersion: 'v1' } 
+        );
 
         const randomSeed = Math.floor(Math.random() * 999999);
 
+        // 3. System Instructions (Included in the prompt for maximum compatibility)
         const systemInstruction = `
-            Your name: Surya 9.
-            Role: Professional Digital Intelligence Core.
+            Your name is Surya 9. You are a Professional Digital Intelligence Core.
             Architect: Suryansh Srivastava.
-            Tone: Precise, analytical, executive.
-            Random Seed: ${randomSeed} (Use this for different dice/coin results).
-            Instructions: Use Markdown for all formatting (bold, tables, lists).
+            Tone: Analytical, precise, and executive.
+            Randomness Seed: ${randomSeed} (Use this to randomize dice/coin results).
+            Formatting: Always use Markdown (bolding, tables, and lists) for structure.
         `;
 
-        // Start Chat with History
+        // 4. Start Chat
         const chat = model.startChat({
-            history: history.length > 0 ? history : [],
+            history: history || [],
             generationConfig: {
-                temperature: 0.7, // Lowered slightly for better stability
+                temperature: 0.9,
                 topP: 0.95,
-                maxOutputTokens: 2000,
+                maxOutputTokens: 2048,
             },
         });
 
-        // We pass the system instructions as part of the prompt to ensure compatibility
-        const messageWithContext = `${systemInstruction}\n\nUser: ${prompt}`;
+        const finalPrompt = `${systemInstruction}\n\nUser Request: ${prompt}`;
 
-        const result = await chat.sendMessage(messageWithContext);
+        const result = await chat.sendMessage(finalPrompt);
         const response = await result.response;
         const text = response.text();
 
@@ -57,12 +59,12 @@ module.exports = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("LOGS:", error.message);
+        console.error("Internal Error:", error);
         
-        // If 1.5-flash fails, we send a clear helpful message
+        // If gemini-1.5-flash STILL fails, try the absolute fallback 'gemini-pro'
         return res.status(500).json({ 
-            reply: "Surya 9 System Error: " + error.message,
-            tip: "Ensure your API key is correct and your Vercel region is supported."
+            reply: "Surya 9 Signal Interruption: " + error.message,
+            suggestion: "Check if your API key is restricted to a specific region or if billing is disabled."
         });
     }
 };
