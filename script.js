@@ -5,15 +5,14 @@ const btn = document.getElementById('send-trigger');
 
 let history = [];
 
-async function sendMessage() {
+async function main() {
     const text = input.value.trim();
     if (!text) return;
 
-    appendMessage('user', text);
+    appendMsg('user', text);
     input.value = '';
 
-    // Subtle loading bubble
-    const loadingDiv = appendMessage('ai', '...');
+    const loader = appendMsg('ai', '...');
 
     try {
         const res = await fetch('/api/chat', {
@@ -24,20 +23,18 @@ async function sendMessage() {
         
         const data = await res.json();
         
-        // Render Markdown
-        loadingDiv.innerHTML = md.render(data.reply);
+        loader.innerHTML = md.render(data.reply);
         
-        // Update History
         history.push({ role: 'user', parts: [{ text: text }] });
         history.push({ role: 'model', parts: [{ text: data.reply }] });
         if (history.length > 10) history.shift();
 
     } catch (err) {
-        loadingDiv.innerText = "I'm having a bit of trouble connecting. Try again?";
+        loader.innerText = "Connection lost in space. Try again?";
     }
 }
 
-function appendMessage(role, text) {
+function appendMsg(role, text) {
     const div = document.createElement('div');
     div.className = `msg ${role}-msg`;
     div.innerText = text;
@@ -46,5 +43,5 @@ function appendMessage(role, text) {
     return div;
 }
 
-btn.addEventListener('click', sendMessage);
-input.addEventListener('keypress', e => e.key === 'Enter' && sendMessage());
+btn.addEventListener('click', main);
+input.addEventListener('keypress', e => e.key === 'Enter' && main());
