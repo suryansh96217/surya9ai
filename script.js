@@ -3,46 +3,33 @@ const viewport = document.getElementById('chat-viewport');
 const input = document.getElementById('query-input');
 const btn = document.getElementById('send-trigger');
 
-let chatHistory = [];
+let history = [];
 
-async function handleMessage() {
-    const val = input.value.trim();
-    if (!val) return;
+async function chat() {
+    const text = input.value.trim();
+    if (!text) return;
 
-    // Show user message
-    appendMsg('user', val);
+    appendMsg('user', text);
     input.value = '';
-
-    // Loading indicator
     const loader = appendMsg('ai', '...');
 
     try {
         const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                prompt: val, 
-                history: chatHistory 
-            })
+            body: JSON.stringify({ prompt: text, history: history })
         });
         
         const data = await res.json();
+        loader.innerHTML = md.render(data.reply);
         
-        if (data.reply) {
-            // Update History for memory
-            chatHistory.push({ role: 'user', parts: [{ text: val }] });
-            chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
-            
-            // Render Markdown
-            loader.innerHTML = md.render(data.reply);
-        } else {
-            loader.innerText = "System returned an empty signal.";
-        }
+        history.push({ role: 'user', parts: [{ text: text }] });
+        history.push({ role: 'model', parts: [{ text: data.reply }] });
+        if (history.length > 10) history.shift();
+
     } catch (err) {
-        loader.innerText = "Connection lost. Please try again.";
+        loader.innerText = "Connection lost. Try again?";
     }
-    
-    viewport.scrollTop = viewport.scrollHeight;
 }
 
 function appendMsg(role, text) {
@@ -51,8 +38,8 @@ function appendMsg(role, text) {
     div.innerText = text;
     viewport.appendChild(div);
     viewport.scrollTop = viewport.scrollHeight;
-    return div; // Important: returns the element so we can update it later
+    return div;
 }
 
-btn.addEventListener('click', handleMessage);
-input.addEventListener('keypress', e => e.key === 'Enter' && handleMessage());
+btn.addEventListener('click', chat);
+input.addEventListener('keypress', e => e.key === 'Enter' && chat());
