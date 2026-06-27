@@ -1,10 +1,5 @@
 {
   "name": "surya-9",
   "version": "1.0.0",
-  "description": "Surya 9 Cosmic Assistant",
-  "main": "api/chat.js",
-  "dependencies": {},
-  "engines": {
-    "node": "18.x"
-  }
+  "private": true
 }
