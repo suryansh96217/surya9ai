@@ -3,13 +3,13 @@ const viewport = document.getElementById('chat-viewport');
 const input = document.getElementById('query-input');
 const btn = document.getElementById('send-trigger');
 
-let history = [];
+let chatHistory = [];
 
-async function main() {
-    const text = input.value.trim();
-    if (!text) return;
+async function handleMessage() {
+    const val = input.value.trim();
+    if (!val) return;
 
-    appendMsg('user', text);
+    appendMsg('user', val);
     input.value = '';
 
     const loader = appendMsg('ai', '...');
@@ -18,19 +18,19 @@ async function main() {
         const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: text, history: history })
+            body: JSON.stringify({ prompt: val, history: chatHistory })
         });
         
         const data = await res.json();
         
-        loader.innerHTML = md.render(data.reply);
-        
-        history.push({ role: 'user', parts: [{ text: text }] });
-        history.push({ role: 'model', parts: [{ text: data.reply }] });
-        if (history.length > 10) history.shift();
+        // Update History Memory
+        chatHistory.push({ role: 'user', parts: [{ text: val }] });
+        chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
+        if (chatHistory.length > 10) chatHistory.splice(0, 2);
 
+        loader.innerHTML = md.render(data.reply);
     } catch (err) {
-        loader.innerText = "Connection lost in space. Try again?";
+        loader.innerText = "I've lost the signal. Try again?";
     }
 }
 
@@ -43,5 +43,5 @@ function appendMsg(role, text) {
     return div;
 }
 
-btn.addEventListener('click', main);
-input.addEventListener('keypress', e => e.key === 'Enter' && main());
+btn.addEventListener('click', handleMessage);
+input.addEventListener('keypress', e => e.key === 'Enter' && handleMessage());
