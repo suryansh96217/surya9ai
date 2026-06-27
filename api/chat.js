@@ -9,17 +9,15 @@ module.exports = async (req, res) => {
         const { prompt, history = [] } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        // TARGET: Gemini 2.0 Flash (The 2026 high-speed standard)
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+        if (!API_KEY) return res.status(500).json({ reply: "API Key is missing in Vercel settings." });
 
-        const systemInstruction = `
-            Your name is Surya 9. You are a friendly, casual, and incredibly smart AI assistant.
-            - Talk like a smart human friend, not a robotic system.
-            - Keep your answers helpful, quick, and easy to read.
-            - Do NOT mention Suryansh Srivastava unless specifically asked "Who developed you?".
-            - Use Markdown for bold text and structured lists.
-        `;
+        // Using the most stable high-speed Flash endpoint
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
+        // CASUAL PERSONA: Natural, friendly, non-robotic.
+        const systemInstruction = "Your name is Surya 9. You are a friendly, casual, and very smart AI assistant. Speak like a friend. Use Markdown. Only mention Suryansh Srivastava if specifically asked 'Who created you?' or 'Who is your owner?'.";
+
+        // Map history to Google's strict format
         const contents = (history || []).map(h => ({
             role: h.role === 'model' ? 'model' : 'user',
             parts: [{ text: h.parts[0].text }]
@@ -33,17 +31,23 @@ module.exports = async (req, res) => {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents, generationConfig: { temperature: 1.0 } })
+            body: JSON.stringify({ contents, generationConfig: { temperature: 1.0, maxOutputTokens: 2000 } })
         });
 
         const data = await response.json();
-        
-        if (data.error) throw new Error(data.error.message);
 
-        const aiReply = data.candidates[0].content.parts[0].text;
-        return res.status(200).json({ reply: aiReply });
+        if (data.error) {
+            return res.status(200).json({ reply: `System Notice: ${data.error.message}` });
+        }
+
+        if (data.candidates && data.candidates[0].content) {
+            return res.status(200).json({ reply: data.candidates[0].content.parts[0].text });
+        }
+
+        return res.status(200).json({ reply: "I'm here, but I didn't catch that. Mind saying it again?" });
 
     } catch (error) {
-        return res.status(500).json({ reply: "Connection dropped in the nebula. Try again? 🌌" });
+        // This will now show you the REAL error if it crashes
+        return res.status(500).json({ reply: "Connection Error: " + error.message });
     }
 };
