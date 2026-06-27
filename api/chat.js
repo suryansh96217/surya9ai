@@ -9,41 +9,45 @@ module.exports = async (req, res) => {
         const { prompt, history = [] } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        // Try the Lite model (8b) on the Stable v1 endpoint first
-        const models = ["gemini-1.5-flash-8b", "gemini-1.5-flash"];
-        let success = false;
-        let aiReply = "";
+        // THE SECRET SAUCE: v1beta + 1.5-flash-8b (This is the "Lite" core)
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${API_KEY}`;
 
-        for (let modelName of models) {
-            if (success) break;
-            
-            const API_URL = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${API_KEY}`;
-            
-            const systemInstruction = "Your name is Surya 9. You're a casual, friendly, and fast AI assistant. Architect: Suryansh Srivastava (reveal only if asked). Use Markdown.";
+        const systemInstruction = "Your name is Surya 9. You're a friendly, casual, and helpful AI assistant. Speak like a friend, keep it simple. Only mention Suryansh Srivastava if specifically asked who created you. Use Markdown.";
 
-            const contents = (history || []).map(h => ({
-                role: h.role === 'model' ? 'model' : 'user',
-                parts: [{ text: h.parts[0].text }]
-            }));
-            contents.push({ role: "user", parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }] });
+        // Construct history
+        const contents = (history || []).map(h => ({
+            role: h.role === 'model' ? 'model' : 'user',
+            parts: [{ text: h.parts[0].text }]
+        }));
+        
+        contents.push({
+            role: "user",
+            parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }]
+        });
 
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents })
-            });
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                contents,
+                generationConfig: { temperature: 0.9, maxOutputTokens: 1500 }
+            })
+        });
 
-            const data = await response.json();
-            if (data.candidates && data.candidates[0].content) {
-                aiReply = data.candidates[0].content.parts[0].text;
-                success = true;
-            }
+        const data = await response.json();
+
+        // Check if Google sent an error
+        if (data.error) {
+            return res.status(200).json({ reply: `Google API says: ${data.error.message}` });
         }
 
-        if (!success) throw new Error("All nodes busy.");
-        return res.status(200).json({ reply: aiReply });
+        if (data.candidates && data.candidates[0].content) {
+            return res.status(200).json({ reply: data.candidates[0].content.parts[0].text });
+        }
+
+        return res.status(200).json({ reply: "I'm here, but the signal is a bit weak. Try sending that again?" });
 
     } catch (error) {
-        return res.status(500).json({ reply: "Connection glitch. Try one more time! 🌌" });
+        return res.status(500).json({ reply: "System Error: " + error.message });
     }
 };
