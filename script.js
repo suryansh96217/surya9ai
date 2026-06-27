@@ -9,29 +9,40 @@ async function handleMessage() {
     const val = input.value.trim();
     if (!val) return;
 
+    // Show user message
     appendMsg('user', val);
     input.value = '';
 
+    // Loading indicator
     const loader = appendMsg('ai', '...');
 
     try {
         const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: val, history: chatHistory })
+            body: JSON.stringify({ 
+                prompt: val, 
+                history: chatHistory 
+            })
         });
         
         const data = await res.json();
         
-        // Update History Memory
-        chatHistory.push({ role: 'user', parts: [{ text: val }] });
-        chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
-        if (chatHistory.length > 10) chatHistory.splice(0, 2);
-
-        loader.innerHTML = md.render(data.reply);
+        if (data.reply) {
+            // Update History for memory
+            chatHistory.push({ role: 'user', parts: [{ text: val }] });
+            chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
+            
+            // Render Markdown
+            loader.innerHTML = md.render(data.reply);
+        } else {
+            loader.innerText = "System returned an empty signal.";
+        }
     } catch (err) {
-        loader.innerText = "I've lost the signal. Try again?";
+        loader.innerText = "Connection lost. Please try again.";
     }
+    
+    viewport.scrollTop = viewport.scrollHeight;
 }
 
 function appendMsg(role, text) {
@@ -40,7 +51,7 @@ function appendMsg(role, text) {
     div.innerText = text;
     viewport.appendChild(div);
     viewport.scrollTop = viewport.scrollHeight;
-    return div;
+    return div; // Important: returns the element so we can update it later
 }
 
 btn.addEventListener('click', handleMessage);
