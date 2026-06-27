@@ -3,28 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surya 9 AI </title>
-    <!-- The Fix: This script handles the **bold** problem -->
+    <title>Surya 9 AI | Intelligence Core</title>
     <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Outfit:wght@300;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Astral Background Layers -->
+    <div class="stars"></div>
+    <div class="aurora"></div>
+    
+    <!-- Side Decorations -->
+    <div class="side-bar left-bar"></div>
+    <div class="side-bar right-bar"></div>
+
     <div class="glass-container">
         <header>
-            <div class="brand">SURYA <span class="accent">9</span></div>
-            <div class="status"><span class="dot"></span> 3.5 FLASH CORE</div>
+            <div class="brand">
+                <span class="logo-icon">⚡</span> 
+                SURYA <span class="accent">9</span>
+            </div>
+            <div class="status-box">
+                <span class="pulse-dot"></span>
+                <span class="status-text">CORE v1.5 ACTIVE</span>
+            </div>
         </header>
 
         <div id="chat-viewport">
-            <div class="msg ai-msg">Surya 9 online. How can I help you, Friend?</div>
+            <div class="msg ai-msg">
+                <strong>System Initialized.</strong><br>
+                Surya 9 online. Awaiting your command, Architect.
+            </div>
         </div>
 
-        <div class="input-wrapper">
-            <input type="text" id="query-input" placeholder="Enter prompt..." autofocus>
-            <button id="send-trigger">RUN</button>
+        <div class="typing-indicator" id="typing">Surya 9 is processing...</div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" id="query-input" placeholder="Query the intelligence core..." autofocus>
+                <button id="send-trigger">
+                    <span class="btn-text">RUN</span>
+                    <span class="btn-icon">🚀</span>
+                </button>
+            </div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
