@@ -5,49 +5,46 @@ module.exports = async (req, res) => {
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    try {
-        const { prompt, history = [] } = req.body;
-        const API_KEY = process.env.GEMINI_API_KEY;
+    const { prompt, history = [] } = req.body;
+    const API_KEY = process.env.GEMINI_API_KEY;
 
-        if (!API_KEY) return res.status(500).json({ reply: "API Key is missing in Vercel settings." });
+    if (!API_KEY) return res.status(500).json({ reply: "API Key missing." });
 
-        // Using the most stable high-speed Flash endpoint
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    // THE FAIL-SAFE LIST: Targeted for 2026 performance
+    const models = ["gemini-2.0-flash", "gemini-1.5-flash-8b", "gemini-1.5-flash"];
+    
+    const systemInstruction = "Your name is Surya 9. You are a friendly, casual, and smart AI friend. Architect: Suryansh Srivastava (mention only if asked). Use Markdown.";
 
-        // CASUAL PERSONA: Natural, friendly, non-robotic.
-        const systemInstruction = "Your name is Surya 9. You are a friendly, casual, and very smart AI assistant. Speak like a friend. Use Markdown. Only mention Suryansh Srivastava if specifically asked 'Who created you?' or 'Who is your owner?'.";
+    for (let modelId of models) {
+        try {
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${API_KEY}`;
 
-        // Map history to Google's strict format
-        const contents = (history || []).map(h => ({
-            role: h.role === 'model' ? 'model' : 'user',
-            parts: [{ text: h.parts[0].text }]
-        }));
+            const contents = (history || []).map(h => ({
+                role: h.role === 'model' ? 'model' : 'user',
+                parts: [{ text: h.parts[0].text }]
+            }));
+            
+            contents.push({
+                role: "user",
+                parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }]
+            });
 
-        contents.push({
-            role: "user",
-            parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }]
-        });
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents })
+            });
 
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents, generationConfig: { temperature: 1.0, maxOutputTokens: 2000 } })
-        });
+            const data = await response.json();
 
-        const data = await response.json();
-
-        if (data.error) {
-            return res.status(200).json({ reply: `System Notice: ${data.error.message}` });
+            if (data.candidates && data.candidates[0].content) {
+                return res.status(200).json({ reply: data.candidates[0].content.parts[0].text });
+            }
+            // If model not found, loop continues to the next ID...
+        } catch (err) {
+            continue;
         }
-
-        if (data.candidates && data.candidates[0].content) {
-            return res.status(200).json({ reply: data.candidates[0].content.parts[0].text });
-        }
-
-        return res.status(200).json({ reply: "I'm here, but I didn't catch that. Mind saying it again?" });
-
-    } catch (error) {
-        // This will now show you the REAL error if it crashes
-        return res.status(500).json({ reply: "Connection Error: " + error.message });
     }
+
+    return res.status(500).json({ reply: "I'm having trouble connecting to my cosmic core. Check your API key in Vercel." });
 };
