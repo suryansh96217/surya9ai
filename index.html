@@ -3,27 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surya 9 | Full Screen</title>
+    <title>Surya 9 | Antariksh Core</title>
     <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Deep Space Layers -->
     <div class="stars"></div>
+    <div class="twinkle"></div>
+    <div class="shooting-stars"></div>
     <div class="aurora"></div>
 
     <div class="main-viewport">
         <header>
-            <div class="brand">SURYA <span>9</span></div>
+            <div class="brand-container">
+                <div class="brand">SURYA <span>9</span></div>
+                <div class="header-line"></div>
+            </div>
+            <div class="status-chip">● ACTIVE</div>
         </header>
 
         <div id="chat-viewport">
-            <div class="msg ai-msg">Hey! I'm Surya 9. Ready to help, Friend.</div>
+            <!-- Messages load here -->
         </div>
 
         <div class="input-area">
-            <input type="text" id="query-input" placeholder="What's next?" autofocus>
-            <button id="send-trigger">RUN</button>
+            <div class="input-container">
+                <input type="text" id="query-input" placeholder="Ask the Antariksh..." autofocus>
+                <button id="send-trigger">RUN</button>
+            </div>
         </div>
     </div>
 
