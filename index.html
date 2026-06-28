@@ -1,32 +1,73 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surya 9</title>
-    <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div class="stars"></div>
-    <div class="aurora"></div>
+const md = window.markdownit({ html: true, linkify: true });
+const viewport = document.getElementById('chat-viewport');
+const input = document.getElementById('query-input');
+const btn = document.getElementById('send-trigger');
 
-    <div class="glass-container">
-        <header>
-            <div class="brand">Surya <span>9</span></div>
-            <div class="status">● ONLINE</div>
-        </header>
+let chatHistory = [];
 
-        <div id="chat-viewport">
-            <div class="msg ai-msg">Hey! I'm Surya 9. How can I help you today?</div>
-        </div>
+async function mainChat() {
+    const text = input.value.trim();
+    if (!text) return;
 
-        <div class="input-area">
-            <input type="text" id="query-input" placeholder="Say hello..." autofocus>
-            <button id="send-trigger">Send</button>
-        </div>
-    </div>
-    <script src="script.js"></script>
-</body>
-</html>
+    appendMessage('user', text);
+    input.value = '';
+    const loader = appendMessage('ai', 'Thinking...');
+
+    try {
+        const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: text, history: chatHistory })
+        });
+        
+        const data = await res.json();
+        loader.innerHTML = md.render(data.reply);
+        
+        // Add both to history
+        chatHistory.push({ role: 'user', parts: [{ text: text }] });
+        chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
+
+    } catch (err) {
+        loader.innerText = "I lost the link. Can we try again?";
+    }
+}
+
+function appendMessage(role, text) {
+    const div = document.createElement('div');
+    const index = chatHistory.length; // Tracking position for editing
+    div.className = `msg ${role}-msg`;
+    div.innerText = text;
+
+    if (role === 'user') {
+        const editBtn = document.createElement('button');
+        editBtn.innerHTML = '✎';
+        editBtn.className = 'edit-btn';
+        editBtn.onclick = () => startEdit(text, index);
+        div.appendChild(editBtn);
+    }
+
+    viewport.appendChild(div);
+    viewport.scrollTop = viewport.scrollHeight;
+    return div;
+}
+
+function startEdit(text, historyIndex) {
+    // 1. Put text back in input
+    input.value = text;
+    input.focus();
+
+    // 2. Clear UI from that message onwards
+    const allMsgs = document.querySelectorAll('.msg');
+    const visualIndex = historyIndex / 2; // Every user msg has an AI response
+    
+    // Remove messages from UI
+    for (let i = allMsgs.length - 1; i >= visualIndex; i--) {
+        allMsgs[i].remove();
+    }
+
+    // 3. Trim History Array to that point
+    chatHistory = chatHistory.slice(0, historyIndex);
+}
+
+btn.addEventListener('click', mainChat);
+input.addEventListener('keypress', e => e.key === 'Enter' && mainChat());
