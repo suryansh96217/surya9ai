@@ -9,16 +9,14 @@ async function chat() {
     const text = input.value.trim();
     if (!text || btn.classList.contains('loading')) return;
 
-    // 1. Enter Loading State
-    const originalBtnText = btn.innerText;
-    btn.innerText = "● ● ●";
+    // Loading State ON
+    const oldText = btn.innerText;
+    btn.innerText = "●";
     btn.classList.add('loading');
-    btn.disabled = true;
 
     appendMsg('user', text);
     input.value = '';
-    
-    const loader = appendMsg('ai', 'Connecting to Antariksh...');
+    const loader = appendMsg('ai', '...');
 
     try {
         const res = await fetch('/api/chat', {
@@ -28,29 +26,22 @@ async function chat() {
         });
         
         const data = await res.json();
-        
-        // Render Response
         loader.innerHTML = md.render(data.reply);
         
-        // Update Memory
         history.push({ role: 'user', parts: [{ text: text }] });
         history.push({ role: 'model', parts: [{ text: data.reply }] });
-        if (history.length > 10) history.shift();
-
     } catch (err) {
-        loader.innerText = "Signal lost in deep space. Retry?";
+        loader.innerText = "Signal lost.";
     } finally {
-        // 2. Exit Loading State
-        btn.innerText = originalBtnText;
+        // Loading State OFF
+        btn.innerText = oldText;
         btn.classList.remove('loading');
-        btn.disabled = false;
-        input.focus();
     }
 }
 
 function appendMsg(role, text) {
     const div = document.createElement('div');
-    const index = history.length;
+    const idx = history.length;
     div.className = `msg ${role}-msg`;
     div.innerText = text;
 
@@ -59,13 +50,12 @@ function appendMsg(role, text) {
         edit.innerHTML = '✎';
         edit.className = 'edit-btn';
         edit.onclick = () => {
-            if (btn.classList.contains('loading')) return; // Prevent edit while loading
             input.value = text;
             input.focus();
             const all = document.querySelectorAll('.msg');
-            const vIndex = index / 2;
-            for (let i = all.length - 1; i >= vIndex; i--) all[i].remove();
-            history = history.slice(0, index);
+            const vIdx = idx / 2;
+            for (let i = all.length - 1; i >= vIdx; i--) all[i].remove();
+            history = history.slice(0, idx);
         };
         div.appendChild(edit);
     }
