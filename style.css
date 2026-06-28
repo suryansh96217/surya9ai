@@ -214,3 +214,27 @@ button#send-trigger:hover {
 
 #chat-viewport::-webkit-scrollbar { width: 4px; }
 #chat-viewport::-webkit-scrollbar-thumb { background: var(--space-blue); border-radius: 10px; }
+/* --- RUN BUTTON LOADING STATE --- */
+button#send-trigger.loading {
+    background: var(--space-blue) !important;
+    color: black !important;
+    cursor: not-allowed;
+    pointer-events: none; /* Prevents double-clicking */
+    box-shadow: 0 0 20px var(--space-blue);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Pulsing effect during loading */
+button#send-trigger.loading::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: loading-sweep 1.5s infinite;
+}
+
+@keyframes loading-sweep {
+    100% { left: 100%; }
+}
