@@ -3,50 +3,69 @@ const viewport = document.getElementById('chat-viewport');
 const input = document.getElementById('query-input');
 const btn = document.getElementById('send-trigger');
 
-let chatHistory = [];
+let history = [];
 
-async function ask() {
+async function chat() {
     const text = input.value.trim();
-    if (!text) return;
+    if (!text || btn.classList.contains('loading')) return;
+
+    // 1. Enter Loading State
+    const originalBtnText = btn.innerText;
+    btn.innerText = "● ● ●";
+    btn.classList.add('loading');
+    btn.disabled = true;
 
     appendMsg('user', text);
     input.value = '';
-    const loader = appendMsg('ai', '...');
+    
+    const loader = appendMsg('ai', 'Connecting to Antariksh...');
 
     try {
         const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: text, history: chatHistory })
+            body: JSON.stringify({ prompt: text, history: history })
         });
         
         const data = await res.json();
+        
+        // Render Response
         loader.innerHTML = md.render(data.reply);
         
-        chatHistory.push({ role: 'user', parts: [{ text: text }] });
-        chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
+        // Update Memory
+        history.push({ role: 'user', parts: [{ text: text }] });
+        history.push({ role: 'model', parts: [{ text: data.reply }] });
+        if (history.length > 10) history.shift();
+
     } catch (err) {
-        loader.innerText = "Connection lost.";
+        loader.innerText = "Signal lost in deep space. Retry?";
+    } finally {
+        // 2. Exit Loading State
+        btn.innerText = originalBtnText;
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        input.focus();
     }
 }
 
 function appendMsg(role, text) {
     const div = document.createElement('div');
-    const index = chatHistory.length;
+    const index = history.length;
     div.className = `msg ${role}-msg`;
     div.innerText = text;
 
     if (role === 'user') {
         const edit = document.createElement('button');
         edit.innerHTML = '✎';
-        edit.style.cssText = "position:absolute; right:-30px; background:none; border:none; color:#555; cursor:pointer;";
+        edit.className = 'edit-btn';
         edit.onclick = () => {
+            if (btn.classList.contains('loading')) return; // Prevent edit while loading
             input.value = text;
             input.focus();
             const all = document.querySelectorAll('.msg');
             const vIndex = index / 2;
-            for (let i = all.length - 1; i > vIndex; i--) all[i].remove();
-            chatHistory = chatHistory.slice(0, index);
+            for (let i = all.length - 1; i >= vIndex; i--) all[i].remove();
+            history = history.slice(0, index);
         };
         div.appendChild(edit);
     }
@@ -56,5 +75,5 @@ function appendMsg(role, text) {
     return div;
 }
 
-btn.addEventListener('click', ask);
-input.addEventListener('keypress', e => e.key === 'Enter' && ask());
+btn.addEventListener('click', chat);
+input.addEventListener('keypress', e => e.key === 'Enter' && chat());
