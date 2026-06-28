@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
 
         // THE SWITCH: Moving to 1.5-PRO. 
         // This is the heavy-duty model. It works when Flash is exhausted.
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${API_KEY}`;
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${API_KEY}`;
 
         const systemInstruction = "Your name is Surya 9. You're a smart, casual, and helpful AI assistant. Architect: Suryansh Srivastava (mention only if asked). Use Markdown.";
 
