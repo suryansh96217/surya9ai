@@ -5,13 +5,13 @@ const btn = document.getElementById('send-trigger');
 
 let chatHistory = [];
 
-async function mainChat() {
+async function ask() {
     const text = input.value.trim();
     if (!text) return;
 
-    appendMessage('user', text);
+    appendMsg('user', text);
     input.value = '';
-    const loader = appendMessage('ai', 'Thinking...');
+    const loader = appendMsg('ai', '...');
 
     try {
         const res = await fetch('/api/chat', {
@@ -23,27 +23,32 @@ async function mainChat() {
         const data = await res.json();
         loader.innerHTML = md.render(data.reply);
         
-        // Add both to history
         chatHistory.push({ role: 'user', parts: [{ text: text }] });
         chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
-
     } catch (err) {
-        loader.innerText = "I lost the link. Can we try again?";
+        loader.innerText = "Connection lost.";
     }
 }
 
-function appendMessage(role, text) {
+function appendMsg(role, text) {
     const div = document.createElement('div');
-    const index = chatHistory.length; // Tracking position for editing
+    const index = chatHistory.length;
     div.className = `msg ${role}-msg`;
     div.innerText = text;
 
     if (role === 'user') {
-        const editBtn = document.createElement('button');
-        editBtn.innerHTML = '✎';
-        editBtn.className = 'edit-btn';
-        editBtn.onclick = () => startEdit(text, index);
-        div.appendChild(editBtn);
+        const edit = document.createElement('button');
+        edit.innerHTML = '✎';
+        edit.style.cssText = "position:absolute; right:-30px; background:none; border:none; color:#555; cursor:pointer;";
+        edit.onclick = () => {
+            input.value = text;
+            input.focus();
+            const all = document.querySelectorAll('.msg');
+            const vIndex = index / 2;
+            for (let i = all.length - 1; i > vIndex; i--) all[i].remove();
+            chatHistory = chatHistory.slice(0, index);
+        };
+        div.appendChild(edit);
     }
 
     viewport.appendChild(div);
@@ -51,23 +56,5 @@ function appendMessage(role, text) {
     return div;
 }
 
-function startEdit(text, historyIndex) {
-    // 1. Put text back in input
-    input.value = text;
-    input.focus();
-
-    // 2. Clear UI from that message onwards
-    const allMsgs = document.querySelectorAll('.msg');
-    const visualIndex = historyIndex / 2; // Every user msg has an AI response
-    
-    // Remove messages from UI
-    for (let i = allMsgs.length - 1; i >= visualIndex; i--) {
-        allMsgs[i].remove();
-    }
-
-    // 3. Trim History Array to that point
-    chatHistory = chatHistory.slice(0, historyIndex);
-}
-
-btn.addEventListener('click', mainChat);
-input.addEventListener('keypress', e => e.key === 'Enter' && mainChat());
+btn.addEventListener('click', ask);
+input.addEventListener('keypress', e => e.key === 'Enter' && ask());
