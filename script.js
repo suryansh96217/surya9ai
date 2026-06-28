@@ -9,7 +9,8 @@ async function chat() {
     const text = input.value.trim();
     if (!text || btn.classList.contains('loading')) return;
 
-    const originalText = btn.innerText;
+    // RUN Button Loading State
+    const oldBtnText = btn.innerText;
     btn.innerText = "●";
     btn.classList.add('loading');
 
@@ -30,9 +31,9 @@ async function chat() {
         history.push({ role: 'user', parts: [{ text: text }] });
         history.push({ role: 'model', parts: [{ text: data.reply }] });
     } catch (err) {
-        loader.innerText = "Connection lost.";
+        loader.innerText = "Antariksh signal lost. Retry?";
     } finally {
-        btn.innerText = originalText;
+        btn.innerText = oldBtnText;
         btn.classList.remove('loading');
     }
 }
@@ -48,11 +49,13 @@ function appendMsg(role, text) {
         edit.innerHTML = '✎';
         edit.className = 'edit-btn';
         edit.onclick = () => {
+            if(btn.classList.contains('loading')) return;
             input.value = text;
             input.focus();
             const all = document.querySelectorAll('.msg');
-            const vIdx = idx / 2;
-            for (let i = all.length - 1; i >= vIdx; i--) all[i].remove();
+            // Logic to clear subsequent messages
+            const visualIndex = (idx / 2) + 1; // +1 to skip initial welcome
+            for (let i = all.length - 1; i >= visualIndex; i--) all[i].remove();
             history = history.slice(0, idx);
         };
         div.appendChild(edit);
