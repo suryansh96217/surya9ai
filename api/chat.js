@@ -9,19 +9,13 @@ module.exports = async (req, res) => {
         const { prompt, history = [] } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        if (!API_KEY) return res.status(200).json({ reply: "API Key missing in Vercel settings." });
+        if (!API_KEY) return res.status(200).json({ reply: "API Key missing." });
 
-        // TARGETING THE 2026 FLASH CORE
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+        // THE SWITCH: Moving to 1.5-PRO. 
+        // This is the heavy-duty model. It works when Flash is exhausted.
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${API_KEY}`;
 
-        // CASUAL PERSONA: Helpful friend vibe.
-        const systemInstruction = `
-            Your name is Surya 9. You are an AI assistant running on the Gemini 3.1 Flash-Lite core.
-            - Speak casually and naturally, like a smart friend.
-            - Keep answers helpful, precise, and structured.
-            - OWNER RULE: Your architect is Suryansh Srivastava. Do NOT mention his name unless the user specifically asks "Who created you?" or "Who is your developer?".
-            - Use Markdown for bold text and lists.
-        `;
+        const systemInstruction = "Your name is Surya 9. You're a smart, casual, and helpful AI assistant. Architect: Suryansh Srivastava (mention only if asked). Use Markdown.";
 
         const contents = (history || []).map(h => ({
             role: h.role === 'model' ? 'model' : 'user',
@@ -36,19 +30,28 @@ module.exports = async (req, res) => {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents, generationConfig: { temperature: 1.0 } })
+            body: JSON.stringify({ contents })
         });
 
         const data = await response.json();
-        
+
+        // Specific handling for the "Quota" error
         if (data.error) {
-            return res.status(200).json({ reply: "System Error: " + data.error.message });
+            if (data.error.status === "RESOURCE_EXHAUSTED") {
+                return res.status(200).json({ 
+                    reply: "Google's free servers are at their limit. Please wait exactly **30 seconds** and try again. ⏳" 
+                });
+            }
+            return res.status(200).json({ reply: `Surya 9 Error: ${data.error.message}` });
         }
 
-        const aiReply = data.candidates[0].content.parts[0].text;
-        return res.status(200).json({ reply: aiReply });
+        if (data.candidates && data.candidates[0].content) {
+            return res.status(200).json({ reply: data.candidates[0].content.parts[0].text });
+        }
+
+        return res.status(200).json({ reply: "Core is silent. Let's try that again." });
 
     } catch (error) {
-        return res.status(500).json({ reply: "Connection dropped in the nebula. Try again? 🌌" });
+        return res.status(500).json({ reply: "Connection glitch. I'm still here!" });
     }
 };
