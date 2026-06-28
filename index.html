@@ -9,28 +9,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="space-bg"></div>
-    <div class="stars-layer"></div>
-    <div class="aurora"></div>
-    <!-- Interstellar Flashes -->
-    <div class="flash" style="top: 20%; left: 30%;"></div>
-    <div class="flash" style="top: 70%; left: 80%; animation-delay: 3s;"></div>
+    <!-- Background System -->
+    <div class="space-container">
+        <div class="aurora"></div>
+        <div class="shooting-star"></div>
+    </div>
 
     <div class="main-viewport">
         <header>
-            <div class="logo-group">
-                <div class="brand">SURYA <span>9</span></div>
+            <div class="logo-wrap">
+                <h1 class="brand">SURYA <span>9</span></h1>
                 <div class="logo-line"></div>
             </div>
-            <div class="status-tag">● Active</div>
+            <div class="active-chip">● ACTIVE</div>
         </header>
 
         <div id="chat-viewport">
+            <!-- AI Welcome Message -->
             <div class="msg ai-msg">Surya 9 Ready. How can I assist you?</div>
         </div>
 
         <div class="input-area">
-            <div class="input-box">
+            <div class="input-container">
                 <input type="text" id="query-input" placeholder="Message Surya 9..." autofocus>
                 <button id="send-trigger">RUN</button>
             </div>
