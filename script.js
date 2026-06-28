@@ -9,14 +9,14 @@ async function chat() {
     const text = input.value.trim();
     if (!text || btn.classList.contains('loading')) return;
 
-    // Loading State ON
-    const oldText = btn.innerText;
+    // Loading ON
+    const originalText = btn.innerText;
     btn.innerText = "●";
     btn.classList.add('loading');
 
     appendMsg('user', text);
     input.value = '';
-    const loader = appendMsg('ai', '...');
+    const loader = appendMsg('ai', 'Thinking...');
 
     try {
         const res = await fetch('/api/chat', {
@@ -31,10 +31,10 @@ async function chat() {
         history.push({ role: 'user', parts: [{ text: text }] });
         history.push({ role: 'model', parts: [{ text: data.reply }] });
     } catch (err) {
-        loader.innerText = "Signal lost.";
+        loader.innerText = "Connection lost.";
     } finally {
-        // Loading State OFF
-        btn.innerText = oldText;
+        // Loading OFF
+        btn.innerText = originalText;
         btn.classList.remove('loading');
     }
 }
