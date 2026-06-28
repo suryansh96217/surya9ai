@@ -9,14 +9,13 @@ async function chat() {
     const text = input.value.trim();
     if (!text || btn.classList.contains('loading')) return;
 
-    // Loading ON
     const originalText = btn.innerText;
     btn.innerText = "●";
     btn.classList.add('loading');
 
     appendMsg('user', text);
     input.value = '';
-    const loader = appendMsg('ai', 'Thinking...');
+    const loader = appendMsg('ai', '...');
 
     try {
         const res = await fetch('/api/chat', {
@@ -33,7 +32,6 @@ async function chat() {
     } catch (err) {
         loader.innerText = "Connection lost.";
     } finally {
-        // Loading OFF
         btn.innerText = originalText;
         btn.classList.remove('loading');
     }
