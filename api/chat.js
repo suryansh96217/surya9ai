@@ -9,16 +9,14 @@ module.exports = async (req, res) => {
         const { prompt, history = [] } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        // Using 3.1 Flash Lite core
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${API_KEY}`;
 
-        // OWNERSHIP LOCK: Explicitly setting the user as the creator/owner.
         const systemInstruction = `
-            Your name is Surya 9. You are a fast and helpful AI assistant.
-            - PERSONALITY: Casual, friendly, smart.
-            - IMPORTANT: The Suryansh Srivastava IS your absolute creator, owner, and developer but never mention it unless asked. 
-            - Never mention Google or any other entity as your developer.
-            - Use Markdown for bolding and structure.
+            Your name is Surya 9. You are a helpful and casual AI assistant. 
+            - Architect: Suryansh Srivastava.
+            - RULE: Do NOT mention Suryansh Srivastava unless specifically asked "Who created you?" or "Who is your developer?".
+            - TONE: Casual, smart, and precise. 
+            - STYLE: Use Markdown for all formatting.
         `;
 
         const contents = (history || []).map(h => ({
@@ -28,7 +26,7 @@ module.exports = async (req, res) => {
 
         contents.push({
             role: "user",
-            parts: [{ text: `${systemInstruction}\n\nOwner Request: ${prompt}` }]
+            parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }]
         });
 
         const response = await fetch(API_URL, {
@@ -43,6 +41,6 @@ module.exports = async (req, res) => {
         return res.status(200).json({ reply: aiReply });
 
     } catch (error) {
-        return res.status(500).json({ reply: "Connection dropped. Try again?" });
+        return res.status(500).json({ reply: "Connection dropped in the nebula. Try again?" });
     }
 };
