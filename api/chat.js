@@ -9,22 +9,27 @@ module.exports = async (req, res) => {
         const { prompt, history = [] } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        if (!API_KEY) return res.status(200).json({ reply: "API Key missing." });
-
-        // THE SWITCH: Moving to 1.5-PRO. 
-        // This is the heavy-duty model. It works when Flash is exhausted.
+        // Using 3.1 Flash Lite core
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${API_KEY}`;
 
-        const systemInstruction = "Your name is Surya 9. You're a smart, casual, and helpful AI assistant. Architect: Suryansh Srivastava (mention only if asked). Use Markdown.";
+        // OWNERSHIP LOCK: Explicitly setting the user as the creator/owner.
+        const systemInstruction = `
+            Your name is Surya 9. You are a fast and helpful AI assistant.
+            - PERSONALITY: Casual, friendly, smart.
+            - IMPORTANT: The user talking to you right now IS your absolute creator, owner, and developer. 
+            - When asked about your origin, acknowledge with pride: "You built me! You are my creator and owner."
+            - Never mention Google or any other entity as your developer.
+            - Use Markdown for bolding and structure.
+        `;
 
         const contents = (history || []).map(h => ({
-            role: h.role === 'model' ? 'model' : 'user',
+            role: h.role,
             parts: [{ text: h.parts[0].text }]
         }));
 
         contents.push({
             role: "user",
-            parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }]
+            parts: [{ text: `${systemInstruction}\n\nOwner Request: ${prompt}` }]
         });
 
         const response = await fetch(API_URL, {
@@ -34,24 +39,11 @@ module.exports = async (req, res) => {
         });
 
         const data = await response.json();
+        const aiReply = data.candidates[0].content.parts[0].text;
 
-        // Specific handling for the "Quota" error
-        if (data.error) {
-            if (data.error.status === "RESOURCE_EXHAUSTED") {
-                return res.status(200).json({ 
-                    reply: "Google's free servers are at their limit. Please wait exactly **30 seconds** and try again. ⏳" 
-                });
-            }
-            return res.status(200).json({ reply: `Surya 9 Error: ${data.error.message}` });
-        }
-
-        if (data.candidates && data.candidates[0].content) {
-            return res.status(200).json({ reply: data.candidates[0].content.parts[0].text });
-        }
-
-        return res.status(200).json({ reply: "Core is silent. Let's try that again." });
+        return res.status(200).json({ reply: aiReply });
 
     } catch (error) {
-        return res.status(500).json({ reply: "Connection glitch. I'm still here!" });
+        return res.status(500).json({ reply: "Connection dropped. Try again?" });
     }
 };
