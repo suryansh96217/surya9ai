@@ -1,6 +1,5 @@
 :root {
     --surya: #ff4d00;
-    --surya-glow: rgba(255, 77, 0, 0.5);
     --space-blue: #00d4ff;
     --space-green: #00ff88;
     --bg-black: #010204;
@@ -17,16 +16,15 @@ body, html {
     overflow: hidden;
 }
 
-/* --- THE SPACE ENGINE (Guaranteed Visible) --- */
+/* --- SPACE ENGINE (The "Fire" Background) --- */
 .space-engine {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 1; /* Lowest Layer */
+    z-index: 1; 
     background: radial-gradient(circle at center, #050a14 0%, #010204 100%);
 }
 
 .star-field {
     position: absolute; width: 100%; height: 100%;
-    /* Dense Star Generation */
     background-image: 
         radial-gradient(1.5px 1.5px at 25px 35px, #fff, transparent),
         radial-gradient(2px 2px at 150px 200px, #fff, transparent),
@@ -39,8 +37,8 @@ body, html {
 
 .nebula {
     position: absolute; width: 80%; height: 80%;
-    filter: blur(120px); opacity: 0.15;
-    animation: nebulaMove 20s infinite alternate;
+    filter: blur(120px); opacity: 0.2;
+    animation: nebulaMove 25s infinite alternate;
 }
 .nebula-blue { top: 0; left: 0; background: var(--space-blue); }
 .nebula-green { bottom: 0; right: 0; background: var(--space-green); }
@@ -49,22 +47,23 @@ body, html {
     position: absolute; top: 20%; left: 100%; width: 150px; height: 2px;
     background: linear-gradient(90deg, white, transparent);
     transform: rotate(-35deg);
-    animation: shoot 12s infinite;
+    animation: shoot 10s infinite;
 }
 
-/* --- THE UI LAYER (Completely Transparent) --- */
+/* --- UI LAYER (The Transparent Parts) --- */
 .app-container {
     position: relative; z-index: 10;
     display: flex; flex-direction: column;
     width: 100vw; height: 100vh;
-    background: transparent; /* Mandatory fix */
+    background: transparent;
 }
 
 header {
     padding: 10px 50px;
     display: flex; justify-content: space-between; align-items: center;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
+    background: transparent; /* FULLY TRANSPARENT */
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    backdrop-filter: blur(5px);
 }
 
 .brand { font-size: 1.5rem; font-weight: 900; letter-spacing: 2px; margin: 0; }
@@ -73,79 +72,84 @@ header {
 .logo-underline {
     width: 100%; height: 2px;
     background: var(--surya); box-shadow: 0 0 10px var(--surya);
-    margin-top: 2px;
-}
-
-.status-chip {
-    font-size: 0.65rem; color: var(--space-green); font-weight: 900;
-    border: 1px solid rgba(0, 255, 136, 0.3);
-    padding: 4px 10px; border-radius: 50px; letter-spacing: 1px;
 }
 
 /* --- CHAT AREA --- */
 #chat-viewport {
     flex: 1; overflow-y: auto;
-    padding: 20px 20%;
-    display: flex; flex-direction: column; gap: 15px;
+    padding: 30px 20%;
+    display: flex; flex-direction: column; gap: 18px;
     background: transparent;
 }
 
 .msg {
-    max-width: 75%; padding: 14px 20px; border-radius: 20px;
-    font-size: 1rem; line-height: 1.5; position: relative;
-    backdrop-filter: blur(8px);
+    max-width: 80%; padding: 16px 22px; border-radius: 22px;
+    font-size: 1rem; line-height: 1.6; position: relative;
+    backdrop-filter: blur(12px); /* Makes text readable over stars */
+    border: 1px solid rgba(255,255,255,0.05);
 }
 
 .user-msg {
-    align-self: flex-end; background: var(--surya); color: white;
-    border-bottom-right-radius: 2px;
+    align-self: flex-end; 
+    background: linear-gradient(135deg, var(--surya), #b33600); 
+    color: white; border-bottom-right-radius: 2px;
 }
 
 .ai-msg {
-    align-self: flex-start; background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1); border-bottom-left-radius: 2px;
+    align-self: flex-start; 
+    background: rgba(255, 255, 255, 0.03); 
+    border-bottom-left-radius: 2px;
 }
 
-/* --- EDIT BUTTON (Left Side) --- */
+/* --- THE LEFT EDIT BUTTON --- */
 .edit-btn {
-    position: absolute; left: -40px; top: 50%; transform: translateY(-50%);
+    position: absolute; left: -45px; top: 50%; transform: translateY(-50%);
     background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white; width: 30px; height: 30px; border-radius: 50%;
-    cursor: pointer; opacity: 0; transition: 0.2s;
+    color: white; width: 32px; height: 32px; border-radius: 50%;
+    cursor: pointer; opacity: 0; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.user-msg:hover .edit-btn { opacity: 1; left: -36px; border-color: var(--space-blue); }
+.user-msg:hover .edit-btn { opacity: 1; left: -38px; }
 
-/* --- INPUT BAR --- */
+/* --- THE TRANSPARENT SEARCH BAR SECTION --- */
 .input-section {
-    padding: 15px 20%;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
+    padding: 20px 20%;
+    background: transparent; /* FULLY TRANSPARENT */
+    backdrop-filter: blur(5px);
 }
 
 .input-wrapper {
-    display: flex; gap: 10px; padding: 8px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex; gap: 12px; padding: 6px;
+    background: rgba(255, 255, 255, 0.04); /* Glass search bar */
+    border-radius: 20px; 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: 0.3s ease;
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--surya);
+    box-shadow: 0 0 15px rgba(255, 77, 0, 0.2);
 }
 
 input {
     flex: 1; background: transparent; border: none;
-    color: white; padding: 10px; font-size: 1rem; outline: none;
+    color: white; padding: 12px 18px; font-size: 1rem; outline: none;
 }
 
 button#send-trigger {
     background: var(--surya); color: white; border: none;
-    padding: 0 25px; border-radius: 12px; font-weight: 800; cursor: pointer;
+    padding: 0 28px; border-radius: 14px; font-weight: 800; 
+    cursor: pointer; transition: 0.3s;
 }
 
-/* --- LOADING & ANIMATIONS --- */
+/* Loading Logic */
 button#send-trigger.loading {
     background: var(--space-blue) !important; color: black !important;
-    box-shadow: 0 0 15px var(--space-blue); cursor: wait;
+    box-shadow: 0 0 20px var(--space-blue); cursor: wait;
 }
 
+/* --- ANIMATIONS --- */
 @keyframes driftStars { from { transform: translateY(0); } to { transform: translateY(-550px); } }
-@keyframes nebulaMove { from { transform: scale(1); } to { transform: scale(1.2); } }
+@keyframes nebulaMove { from { transform: scale(1) rotate(0deg); } to { transform: scale(1.1) rotate(5deg); } }
 @keyframes shoot {
     0% { transform: translate(0, 0) rotate(-35deg); opacity: 0; }
     5% { opacity: 1; }
@@ -156,4 +160,7 @@ button#send-trigger.loading {
 #chat-viewport::-webkit-scrollbar { width: 4px; }
 #chat-viewport::-webkit-scrollbar-thumb { background: var(--surya); border-radius: 10px; }
 
-@media (max-width: 768px) { #chat-viewport, .input-section { padding: 15px 5%; } }
+@media (max-width: 768px) { 
+    #chat-viewport { padding: 20px 5%; }
+    .input-section { padding: 15px 5%; }
+}
