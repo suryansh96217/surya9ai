@@ -9,10 +9,10 @@ async function chat() {
     const text = input.value.trim();
     if (!text || btn.classList.contains('loading')) return;
 
-    // RUN Button Loading State
-    const oldBtnText = btn.innerText;
-    btn.innerText = "●";
+    // Enter Apple-style Loading State
+    const originalContent = btn.innerHTML;
     btn.classList.add('loading');
+    btn.innerHTML = '<div class="apple-loader"></div>';
 
     appendMsg('user', text);
     input.value = '';
@@ -31,10 +31,11 @@ async function chat() {
         history.push({ role: 'user', parts: [{ text: text }] });
         history.push({ role: 'model', parts: [{ text: data.reply }] });
     } catch (err) {
-        loader.innerText = "Antariksh signal lost. Retry?";
+        loader.innerText = "Connection lost. Retry?";
     } finally {
-        btn.innerText = oldBtnText;
+        // Restore RUN Button
         btn.classList.remove('loading');
+        btn.innerHTML = originalContent;
     }
 }
 
@@ -53,8 +54,7 @@ function appendMsg(role, text) {
             input.value = text;
             input.focus();
             const all = document.querySelectorAll('.msg');
-            // Logic to clear subsequent messages
-            const visualIndex = (idx / 2) + 1; // +1 to skip initial welcome
+            const visualIndex = (idx / 2) + 1; 
             for (let i = all.length - 1; i >= visualIndex; i--) all[i].remove();
             history = history.slice(0, idx);
         };
