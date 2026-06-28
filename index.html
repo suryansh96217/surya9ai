@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- BACKGROUND ENGINE: This is fixed to the bottom of everything -->
+    <!-- BACKGROUND ENGINE -->
     <div class="space-engine">
         <div class="star-field"></div>
         <div class="nebula nebula-blue"></div>
@@ -17,7 +17,7 @@
         <div class="shooting-star"></div>
     </div>
 
-    <!-- UI LAYER: Everything here is transparent -->
+    <!-- UI LAYER -->
     <div class="app-container">
         <header>
             <div class="logo-group">
@@ -28,12 +28,15 @@
         </header>
 
         <div id="chat-viewport">
-            <!-- Messages appear here -->
+            <!-- RE-ADDED INITIAL MESSAGE -->
+            <div class="msg ai-msg">
+                Hey! I'm Surya 9. Antariksh link established and ready to assist.
+            </div>
         </div>
 
         <div class="input-section">
             <div class="input-wrapper">
-                <input type="text" id="query-input" placeholder="Query the Antariksh..." autofocus>
+                <input type="text" id="query-input" placeholder="Ask the Antariksh..." autofocus>
                 <button id="send-trigger">RUN</button>
             </div>
         </div>
